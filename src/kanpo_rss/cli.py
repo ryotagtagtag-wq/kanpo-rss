@@ -43,6 +43,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Skip fetching article-level data from issue pages",
     )
     parser.add_argument(
+        "--max-items",
+        type=int,
+        default=100,
+        help="Maximum number of RSS items (default: 100)",
+    )
+    parser.add_argument(
         "-v", "--verbose",
         action="store_true",
         help="Enable verbose logging",
@@ -96,6 +102,10 @@ def main(argv: list[str] | None = None) -> int:
         issues = storage.merge(existing_issues, new_issues)
     else:
         issues = new_issues
+
+    # 最大件数で切り詰め
+    issues = issues[: args.max_items]
+    logger.info("Total issues after merge: %d (max_items=%d)", len(issues), args.max_items)
 
     # Fetch article-level data
     if not args.no_articles:
