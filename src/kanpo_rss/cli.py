@@ -127,6 +127,9 @@ def main(argv: list[str] | None = None) -> int:
     if use_storage:
         storage.save(data_path, issues)
 
+    # Generate main feed (always)
+    generator.generate(issues, args.output_dir)
+
     # Generate fullcontents feed
     if not args.no_articles:
         today = date.today()

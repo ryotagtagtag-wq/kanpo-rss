@@ -77,6 +77,57 @@ class KanpoFeedGenerator:
         entry.pubDate(pub_dt)
         entry.updated(pub_dt)
 
+    def generate(
+        self,
+        issues: list[GazetteIssue],
+        output_dir: str,
+    ) -> None:
+        """号レベルの RSS / Atom フィードを生成する。
+
+        output_dir/feed.xml と output_dir/feed-atom.xml を出力する。
+        """
+        import shutil
+
+        output_dir_path = Path(output_dir)
+        output_dir_path.mkdir(parents=True, exist_ok=True)
+
+        sorted_issues = sorted(
+            issues,
+            key=lambda i: (
+                -i.date.toordinal(),
+                GAZETTE_TYPE_ORDER.get(i.gazette_type, 99),
+            ),
+        )
+
+        fg = self._build_feed()
+        for issue in sorted_issues:
+            entry = fg.add_entry(order="append")
+            entry.title(issue.title)
+            entry.link(href=issue.url)
+            entry.guid(issue.issue_id, permalink=False)
+            entry.description(issue.title)
+            entry.summary(issue.title)
+            entry.category(term=issue.gazette_type.label)
+            pub_dt = datetime(
+                issue.date.year,
+                issue.date.month,
+                issue.date.day,
+                8, 30, 0,
+                tzinfo=JST,
+            )
+            entry.pubDate(pub_dt)
+            entry.updated(pub_dt)
+
+        feed_path = str(output_dir_path / "feed.xml")
+        fg.rss_file(feed_path, pretty=True)
+        atom_path = _atom_path(feed_path)
+        fg.atom_file(atom_path, pretty=True)
+
+        logger.info(
+            "Generated main feed: %s (+atom) with %d items",
+            feed_path, len(sorted_issues),
+        )
+
     def generate_fullcontents_feed(
         self,
         issues: list[GazetteIssue],

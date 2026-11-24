@@ -59,7 +59,13 @@ jobs:
 
       - name: Generate RSS feed
         run: |
-          ARGS="--output-dir ${{ github.event.inputs.output-dir }} --data-dir ${{ github.event.inputs.data-dir }} --max-items ${{ github.event.inputs.max-items }}"
+          OUTPUT_DIR="${{ github.event.inputs.output-dir }}"
+          [ -z "$OUTPUT_DIR" ] && OUTPUT_DIR="docs"
+          DATA_DIR="${{ github.event.inputs.data-dir }}"
+          [ -z "$DATA_DIR" ] && DATA_DIR="data"
+          MAX_ITEMS="${{ github.event.inputs.max-items }}"
+          [ -z "$MAX_ITEMS" ] && MAX_ITEMS="100"
+          ARGS="--output-dir $OUTPUT_DIR --data-dir $DATA_DIR --max-items $MAX_ITEMS"
           [ "${{ github.event.inputs.no-articles }}" = "true" ] && ARGS="$ARGS --no-articles"
           [ -n "${{ github.event.inputs.self-url }}" ] && ARGS="$ARGS --self-url '${{ github.event.inputs.self-url }}'"
           [ "${{ github.event.inputs.verbose }}" = "true" ] && ARGS="$ARGS -v"
