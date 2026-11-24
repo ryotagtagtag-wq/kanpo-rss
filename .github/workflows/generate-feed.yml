@@ -5,6 +5,33 @@ on:
     # 09:00 JST (00:00 UTC) on weekdays
     - cron: '0 0 * * 1-5'
   workflow_dispatch:
+    inputs:
+      output-dir:
+        description: 'Output directory for feed.xml'
+        required: false
+        default: 'docs'
+      data-dir:
+        description: 'Directory for accumulated data (empty string disables accumulation)'
+        required: false
+        default: 'data'
+      max-items:
+        description: 'Maximum number of RSS items'
+        required: false
+        default: '100'
+      no-articles:
+        description: 'Skip article-level feed generation'
+        required: false
+        type: boolean
+        default: false
+      self-url:
+        description: 'Self URL for the feed (rel=self link)'
+        required: false
+        default: ''
+      verbose:
+        description: 'Enable verbose logging'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -31,7 +58,12 @@ jobs:
         run: pip install .
 
       - name: Generate RSS feed
-        run: python -m kanpo_rss --output-dir docs --data-dir data
+        run: |
+          ARGS="--output-dir ${{ github.event.inputs.output-dir }} --data-dir ${{ github.event.inputs.data-dir }} --max-items ${{ github.event.inputs.max-items }}"
+          [ "${{ github.event.inputs.no-articles }}" = "true" ] && ARGS="$ARGS --no-articles"
+          [ -n "${{ github.event.inputs.self-url }}" ] && ARGS="$ARGS --self-url '${{ github.event.inputs.self-url }}'"
+          [ "${{ github.event.inputs.verbose }}" = "true" ] && ARGS="$ARGS -v"
+          python -m kanpo_rss $ARGS
 
       - name: Commit updated data
         run: |
